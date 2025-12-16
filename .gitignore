@@ -1,0 +1,11 @@
+# Ignore Cache
+__pycache__/*
+
+# Ignore .vscode but keep launch tasks and extensions
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# Ignore Log
+Log/**
