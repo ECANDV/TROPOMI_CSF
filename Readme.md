@@ -39,18 +39,7 @@ winget install --id Amazon.AWSCLI -e --source winget
 
 6. Create an account with Copernicus Datastore to download ERA 5 reanalysis files [Copernicus Climate Data Store](https://cds.climate.copernicus.eu/).
 
-7. Using login from the previous point obtain Copernicus credentials to download TROPOMI files. Instruction on configuring access are available from [Copernicus Dataspace S3](https://documentation.dataspace.copernicus.eu/APIs/S3.html). If you use s3cmd, you may need to create .s3cfg file in the root of your directory with access_key and secret_key obtained from Copernicus. Here is an example of content of .s3cfg:
-
-```
-[default]
-access_key = Replace with your own access key
-host_base = eodata.dataspace.copernicus.eu
-host_bucket = eodata.dataspace.copernicus.eu
-human_readable_sizes = False
-secret_key = Replace with your own secret key
-use_https = true
-check_ssl_certificate = true
-```
+7. Using login from the previous point obtain Copernicus credentials to download TROPOMI files. Instruction on configuring access are available from [Copernicus Dataspace S3](https://documentation.dataspace.copernicus.eu/APIs/S3.html). 
 
 ## Project
 1. Create a project folder for your project for example D:\Source\Repos\TROPOMI_CSF
@@ -66,7 +55,7 @@ code D:\Source\Repos\TROPOMI_CSF
 3. In VS Code go to menu Terminal -> New Terminal. In terminal window initialize Git and download the code into the project folder.
 ```
 git init
-git remote add origin githuburl -- (Maciej to update URL)
+git remote add origin https://github.com/ECANDV/TROPOMI_CSF.git
 git fetch origin master
 ```
 
@@ -186,7 +175,7 @@ ERA5.py                 - ERA data management \
 Paper.py                - Chart and listing functions for charts and tables used in the report. \
 SRTM.py                 - Component managing topography data coming from Shuttle Radar Topography Mission. \
 TROPOMI.py              - Manage TROPOMI data \
-TROPOMI_Filter.py       - Algorithm aiming at replicating filtering of orbits as published by Sadavarte et al 2021 \
+TROPOMI_Filter.py       - Algorithm aiming at replicating filtering of orbits as published by Sadavarte et al 2021
 
 ## Metadata and Utilities
 AreaCalculator.py       - Calculate area of polygons in m2 using geodetic coordinates \
@@ -196,14 +185,14 @@ Geometry.py             - Geometrical relationship between domain and pixels \
 Mask.py                 - Masking for enhancement \
 Meteorology.py          - Calculations of pressure averaged boundary layer wind \
 Source.py               - Definition of sources of emissions. Currently contains only Hail Creek \
-trajectory.py           - Utility to draw trajectories \
+trajectory.py           - Utility to draw trajectories
 
 ## Configuration
 Config.py               - Manage configuration of project structure  
 
 ## Documentation
 LICENSE.md              - MIT license for this software \
-Readme.md               - This readme file \
+Readme.md               - This readme file
 
 # Licenses
 This project is licensed under terms of the MIT license. I exstensively depends on Python Standard Library, Additionally it depends on the following packages which carry spearate licences.
@@ -222,4 +211,4 @@ PIL - licence is MIT-CMU, available at [Pillow Licence](https://raw.githubuserco
 pyproj - licence is MIT, available at [PyProj GitHub](https://github.com/pyproj4/pyproj/blob/main/LICENSE) \
 pystac  - licence is Apache 2.0, available at home page [pystac GitHub](https://github.com/stac-utils/pystac) \
 requests - licence is Apache 2.0, available at [requests GitHub](https://github.com/psf/requests/blob/main/LICENSE)  \
-shapely - licence is BSD-3, available at [shapely GitHub](https://github.com/shapely/shapely/blob/main/LICENSE.txt) \
+shapely - licence is BSD-3, available at [shapely GitHub](https://github.com/shapely/shapely/blob/main/LICENSE.txt)
