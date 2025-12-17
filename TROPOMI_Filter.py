@@ -615,10 +615,10 @@ if __name__ == '__main__':
     parser_list.add_argument("step", choices=["all", "contains", "qa", "r"], help="filter step")
     parser_list.set_defaults(func=_handler_list)
 
-    parser_run = subparsers.add_parser("run", help="Run filters using THREDDS files for the source domain.")
+    parser_run = subparsers.add_parser("run", help="Run filters.")
     subparsers_run = parser_run.add_subparsers(help="subcommand help", required=True)
 
-    parser_run_contains = subparsers_run.add_parser("contains", help="Filter files containing domain within specified range of orbits")
+    parser_run_contains = subparsers_run.add_parser("contains", help="Filter files to containing domain within specified range of orbits using Copernicus Search.")
     parser_run_contains.add_argument("username", type=str, help="Copernicus EU username")
     parser_run_contains.add_argument("password", type=str, help="Copernicus EU password")
     parser_run_contains.set_defaults(func=_handler_run_contains)

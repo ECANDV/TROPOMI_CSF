@@ -61,31 +61,38 @@ class Copernicus_S3:
             self._download_single(k)
 
 def _handler_download_filter(args):
+    '''
+    Download all files determined by the TROPOMI_Filter "contains" filter
+    Please note that this may download a lot of files possibly on order of some TB
+    '''
     config = Config()
     Config.create_log("Copernicus_s3.log")
-    cs3 = Copernicus_S3(config, args.aws_access_key_id, args.aws_secret_access_key)
+    cs3 = Copernicus_S3(config, args.access_key, args.access_secret)
     cs3._download_filter()
     
 
 def _handler_download_single(args):
     config = Config()
     Config.create_log("Copernicus_s3.log")
-    cs3 = Copernicus_S3(config, args.aws_access_key_id, args.aws_secret_access_key)
-    cs3._download_single(args.aws_key)
+    cs3 = Copernicus_S3(config, args.access_key, args.access_secret)
+    cs3._download_single(args.S3_key)
 
 if __name__ == '__main__':
     parser = ArgumentParser(prog="Copernicus_S3")
     subparsers = parser.add_subparsers(help="subcommand help", required=True)
 
-    parser_single = subparsers.add_parser("single", help="Download a single file")
-    parser_single.add_argument("aws_access_key_id", type=str, help="Copernicus Dataspace aws_access_key_id")
-    parser_single.add_argument("aws_secret_access_key", type=str, help="Copernicus Dataspace aws_secret_access_key")
-    parser_single.add_argument("aws_key", type=str, help="AWS s3 key in format: Sentinel-5P/TROPOMI/L2__CH4___/2019/09/15/S5P_OFFL_L2__CH4____20190915T030716_20190915T044845_09956_01_010302_20190921T050748.nc")
+    parser_download = subparsers.add_parser("download", help="Download commands.")
+    subparsers_download = parser_download.add_subparsers(help="subcommand help", required=True)
+
+    parser_single = subparsers_download.add_parser("single", help="Download a single file")
+    parser_single.add_argument("access_key", type=str, help="CDSE access key")
+    parser_single.add_argument("access_secret", type=str, help="CDSE access secret")
+    parser_single.add_argument("S3_key", type=str, help="S3 key in format: Sentinel-5P/TROPOMI/L2__CH4___/2019/09/15/S5P_OFFL_L2__CH4____20190915T030716_20190915T044845_09956_01_010302_20190921T050748.nc")
     parser_single.set_defaults(func=_handler_download_single)
 
-    parser_single = subparsers.add_parser("filter", help="Download all files selected by contain filter")
-    parser_single.add_argument("aws_access_key_id", type=str, help="Copernicus Dataspace aws_access_key_id")
-    parser_single.add_argument("aws_secret_access_key", type=str, help="Copernicus Dataspace aws_secret_access_key")
+    parser_single = subparsers_download.add_parser("filter", help="Download all files selected by contains filter")
+    parser_single.add_argument("access_key", type=str, help="CDSE access key")
+    parser_single.add_argument("access_secret", type=str, help="CDSE access secret")
     parser_single.set_defaults(func=_handler_download_filter)
 
     args = parser.parse_args()
