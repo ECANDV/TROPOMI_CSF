@@ -217,9 +217,15 @@ class TROPOMI:
         cbar = fig.colorbar(cs, orientation="horizontal", pad=0.075)
         cbar.ax.set_xlabel("CH4 ppb")
 
-        if boxfilter.contains(source.xy): source.plot_source(ax)
-        s_m = create_source("MoranbahNorth")
-        if boxfilter.contains(s_m.xy): s_m.plot_source(ax)
+        scanstart = TROPOMI.get_scan_start(self.filename)
+        year = int(scanstart[0:4])
+        month = int(scanstart[4:6])
+        if 6 < month: year += 1
+        for s in Source.Sources:
+            sc = create_source(s)
+            if not year in sc.activity: continue
+            if boxfilter.contains(sc.xy): sc.plot_source(ax)
+
         aws = create_aws("Moranbah")
         if boxfilter.contains(aws.xy): aws.plot_aws(ax)
 
@@ -283,9 +289,15 @@ class TROPOMI:
         cbar = fig.colorbar(cs, orientation="horizontal", pad=0.075)
         cbar.ax.set_xlabel("CH4 ppb")
 
-        if config.Algorithm_CSF_domain.contains(source.xy): source.plot_source(ax)
-        s_m = create_source("MoranbahNorth")
-        if config.Algorithm_CSF_domain.contains(s_m.xy): s_m.plot_source(ax)
+        scanstart = TROPOMI.get_scan_start(self.filename)
+        year = int(scanstart[0:4])
+        month = int(scanstart[4:6])
+        if 6 < month: year += 1
+        for s in Source.Sources:
+            sc = create_source(s)
+            if not year in sc.activity: continue
+            if config.Algorithm_CSF_domain.contains(sc.xy): sc.plot_source(ax)
+        
         aws = create_aws("Moranbah")
         if config.Algorithm_CSF_domain.contains(aws.xy): aws.plot_aws(ax)
 
@@ -353,10 +365,14 @@ class TROPOMI:
         cbar.ax.set_xlabel("CH4 ppb")
 
         poly = box(source.xy.x - size, source.xy.y - size, source.xy.x + size, source.xy.y + size)
-        if poly.contains(source.xy): source.plot_source(ax)
-
-        s_m = create_source("MoranbahNorth")
-        if poly.contains(s_m.xy): s_m.plot_source(ax)
+        scanstart = TROPOMI.get_scan_start(self.filename)
+        year = int(scanstart[0:4])
+        month = int(scanstart[4:6])
+        if 6 < month: year += 1
+        for s in Source.Sources:
+            sc = create_source(s)
+            if not year in sc.activity: continue
+            if poly.contains(sc.xy): sc.plot_source(ax)
 
         aws = create_aws("Moranbah")
         if poly.contains(aws.xy): aws.plot_aws(ax)

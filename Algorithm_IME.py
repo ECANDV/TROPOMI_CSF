@@ -199,8 +199,7 @@ class Algorithm_IME:
         cbar.ax.set_xlabel("CH4 ppb")
 
         # Draw mine marker        
-        ax.plot(self.sad.source.xy.x, self.sad.source.xy.y, 'go', markersize=7)
-        ax.text(self.sad.source.label_longitude, self.sad.source.label_latitude, self.sad.source.display_name, color="black")
+        Source.plot_source_in_extent(self.sad.tropomi_source_date, lonmin, latmin, lonmax, latmax, ax)
 
         # Draw downwind box
         drawTrajectory(plt, geodetic, plateCarree, self.downwindbox.exterior.coords)

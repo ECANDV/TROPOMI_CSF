@@ -1,7 +1,7 @@
 # Introduction
 This project is used for analysis of Cross Sectional Flux method applied to TROPOMI data. 
 
-Full report is available on the EC&V web site [Report](http:\\www.ecandv.com.au\TROPOMI-CSF)
+Full report is available on the EC&V web site [Report](http:\\www.ecandv.com.au\projects\TROPOMI_CSF)
 
 # Project installation
 Installation notes target VS Code on Windows 10 and 11. As all code is written in Python this should be easily modifed to Linux or MacOS operating system and your favourite Python IDE.
@@ -173,6 +173,7 @@ Copernicus_Catalogue.py - Search for TROPOMI files in the Copernicus Data Store 
 Copernicus_S3.py        - Download TROPOMI files from the Copernicus Data Store \
 ERA5.py                 - ERA data management \
 Paper.py                - Chart and listing functions for charts and tables used in the report. \
+Source.py               - Definition of sources of emissions. Activity based on Queensland Government Open Data. Approximate location based on Google Maps. \
 SRTM.py                 - Component managing topography data coming from Shuttle Radar Topography Mission. \
 TROPOMI.py              - Manage TROPOMI data \
 TROPOMI_Filter.py       - Algorithm aiming at replicating filtering of orbits as published by Sadavarte et al 2021
@@ -184,7 +185,6 @@ Constants.py            - Set of constants used by calculations \
 Geometry.py             - Geometrical relationship between domain and pixels \
 Mask.py                 - Masking for enhancement \
 Meteorology.py          - Calculations of pressure averaged boundary layer wind \
-Source.py               - Definition of sources of emissions. Currently contains only Hail Creek \
 trajectory.py           - Utility to draw trajectories
 
 ## Configuration

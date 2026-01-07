@@ -350,8 +350,7 @@ def _chart_CSF_background_box_combined(orbit: str, processor: str, fileout:str):
         ax.set_extent(extents=[group_lon_min - 0.1, group_lon_max + 0.1, group_lat_min - 0.1, group_lat_max + 0.1], crs=plateCarree)
         cs = ax.pcolormesh(lons[n], lats[n], scans[n], shading="nearest", vmin=group_v_min, vmax=group_v_max, cmap=plt.cm.rainbow, transform=ccrs.PlateCarree())
 
-        ax.plot(sad.source.longitude, sad.source.latitude, 'go', markersize=7)
-        ax.text(sad.source.label_longitude, sad.source.label_latitude, sad.source.display_name, color="black")
+        Source.plot_source_in_extent(sad.tropomi_source_date, group_lon_min, group_lat_min, group_lon_max, group_lat_max, ax)
         ax.set_title(sad.config.Algorithm_CSF_background_geometry.name, fontsize="small", loc="center")
 
         # Plot point 0.1 degrees upwind from Hail Creek
@@ -530,37 +529,6 @@ def _chart_IME(sourcename: str, orbit: str, processor: str, background: float, t
     ime = Algorithm_IME_factory(sad, background, transectid)
     ime.chart(imagefile)
 
-def _chart_TM(sourcename: str, orbit: str, processor: str, model: str, direction: str, background: float, imagefile: str) -> None:
-    source = create_source(sourcename)
-    filename = Algorithm_CSF.get_picklename(Config(), sourcename, orbit, processor)
-    
-    if not path.exists(filename):
-        __utility_file_does_not_exist(filename)
-        return
-    
-    with open(filename, "rb") as f:
-        sad: Algorithm_CSF = load(f)
-        f.close()
-
-    sourcepath = path.join(Config.HYSPLIT_folder, source.case_name)
-    filenames = listdir(sourcepath)
-    pattern = "HYSPLIT_{}_{}_".format(model, direction)
-    date = datetime(sad.tropomi_source_date.year, sad.tropomi_source_date.month, sad.tropomi_source_date.day, sad.tropomi_source_date.hour, tzinfo=timezone.utc)
-    ah = Algorithm_HYSPLIT(source, model, date)
-    for f in filenames:
-        if not f.startswith(pattern): continue
-        if not logger is None: logger.info("Processing file {}".format(f))
-        ah.addTrajectories(Algorithm_HYSPLIT_from_trajectory(source, model, date, path.join(sourcepath, f)).trajectories)
-
-    if 0 == len(ah.trajectories):
-        if not logger is None: logger.error("No HYSPLIT trajectory files found")
-        print("No HYSPLIT trajectory files found")
-        return
-    
-    tm = Algorithm_TM_factory(sad, ah, background)
-    tm.chart(imagefile)
-    return
-
 def _chart_sadavarte_figure2(type:str, fileout:str) -> int:
     ''' 
     Reproduce Figure 2 of Sadaverte 2021 using data from local analysis 
@@ -604,11 +572,14 @@ def _chart_sadavarte_figure2(type:str, fileout:str) -> int:
             if not logger is None: logger.error("Algorithm run data for orbit: {} has not completed succesfully. Status {} ".format(i, sad.status))
             continue
 
-        if type == "figure2_min_max" and (
-            sad.transects_valid_positive_pixels_count < config.Algorithm_CSF_transect_positive_minimum_count or 
-            config.Algorithm_CSF_transect_valid_maximumu_count < sad.transects_valid_pixels_count
-            ):
-            continue
+        if type == "figure2_min_max":
+            if sad.transects_valid_positive_pixels_count < config.Algorithm_CSF_transect_positive_minimum_count: continue
+            if config.Algorithm_CSF_transect_valid_maximumu_count < sad.transects_valid_pixels_count: continue
+            # if 0 < sad.count_source_in_downindbox(): continue
+            # if 0 < sad.count_source_in_upwindbox(): continue
+        
+        if not logger is None: logger.info("Figure 2: Orbit included: {} Date: {}".format(sad.tropomi.orbit, sad.tropomi_source_date))
+        print("Figure 2: Orbit included: {} Date: {}".format(sad.tropomi.orbit, sad.tropomi_source_date))
 
         dates.append(sad.tropomi_source_date)
         emissionrates.append(sad.q_valid_hour) 
@@ -692,8 +663,13 @@ def _chart_SRTM(t_lat: float, l_lon: float, b_lat:float, r_lon:float, fileout:st
 
     srtm.chart(fig, ax)
     ax.coastlines()
-    if poly.contains(s_h.xy): s_h.plot_source(ax)
-    if poly.contains(s_mn.xy): s_mn.plot_source(ax)
+    # Chart sources that have activity data between April 2018 and December 2020
+    for s in Source.Sources:
+        source = create_source(s)
+        if (not 2018 in source.activity) and (not 2019 in source.activity) and (not 2020 in source.activity): continue
+        if poly.contains(source.xy): source.plot_source(ax)
+    # if poly.contains(s_h.xy): s_h.plot_source(ax)
+    # if poly.contains(s_mn.xy): s_mn.plot_source(ax)
     if poly.contains(aws.xy): aws.plot_aws(ax)
 
     plt.title("SRTM 9s Topography (m) Hail Creek")
@@ -998,6 +974,37 @@ def _chart_synthetic_transect(fileout: str) -> None:
     
     plt.close("all")
 
+def _chart_TM(sourcename: str, orbit: str, processor: str, model: str, direction: str, background: float, imagefile: str) -> None:
+    source = create_source(sourcename)
+    filename = Algorithm_CSF.get_picklename(Config(), sourcename, orbit, processor)
+    
+    if not path.exists(filename):
+        __utility_file_does_not_exist(filename)
+        return
+    
+    with open(filename, "rb") as f:
+        sad: Algorithm_CSF = load(f)
+        f.close()
+
+    sourcepath = path.join(Config.HYSPLIT_folder, source.case_name)
+    filenames = listdir(sourcepath)
+    pattern = "HYSPLIT_{}_{}_".format(model, direction)
+    date = datetime(sad.tropomi_source_date.year, sad.tropomi_source_date.month, sad.tropomi_source_date.day, sad.tropomi_source_date.hour, tzinfo=timezone.utc)
+    ah = Algorithm_HYSPLIT(source, model, date)
+    for f in filenames:
+        if not f.startswith(pattern): continue
+        if not logger is None: logger.info("Processing file {}".format(f))
+        ah.addTrajectories(Algorithm_HYSPLIT_from_trajectory(source, model, date, path.join(sourcepath, f)).trajectories)
+
+    if 0 == len(ah.trajectories):
+        if not logger is None: logger.error("No HYSPLIT trajectory files found")
+        print("No HYSPLIT trajectory files found")
+        return
+    
+    tm = Algorithm_TM_factory(sad, ah, background)
+    tm.chart(imagefile)
+    return
+
 def _list_activity_HailCreek_CY(fileout: str) -> None:
     '''
     List activity data coming from Qld Statistics. 2025-calendar-year-coal-production-statistics.xls
@@ -1202,16 +1209,26 @@ def _list_csf_Figure2(type: str, fileout:str) -> None:
             count_failed += 1
             continue
 
-        if  type == "figure2_min_max" and sad.transects_valid_positive_pixels_count < config.Algorithm_CSF_transect_positive_minimum_count:
-            failed.append("{:05d} Transect positive pixel count {} < {}. Orbit skipped.".format(i, sad.transects_valid_positive_pixels_count, config.Algorithm_CSF_transect_positive_minimum_count))
-            count_failed += 1
-            continue
+        if  type == "figure2_min_max":
+            if sad.transects_valid_positive_pixels_count < config.Algorithm_CSF_transect_positive_minimum_count:
+                failed.append("{:05d} Transect positive pixel count {} < {}. Orbit skipped.".format(i, sad.transects_valid_positive_pixels_count, config.Algorithm_CSF_transect_positive_minimum_count))
+                count_failed += 1
+                continue
 
-        if type == "figure2_min_max" and config.Algorithm_CSF_transect_valid_maximumu_count < sad.transects_valid_pixels_count:
-            failed.append("{:05d} {} < Transact valid pixel count {}. Orbit skipped.".format(i, config.Algorithm_CSF_transect_valid_maximumu_count, sad.transects_valid_pixels_count))
-            count_failed += 1
-            continue
+            if config.Algorithm_CSF_transect_valid_maximumu_count < sad.transects_valid_pixels_count:
+                failed.append("{:05d} {} < Transact valid pixel count {}. Orbit skipped.".format(i, config.Algorithm_CSF_transect_valid_maximumu_count, sad.transects_valid_pixels_count))
+                count_failed += 1
+                continue
 
+            # if 0 < sad.count_source_in_downindbox():
+            #     failed.append("{:05d} Sources present in the downwind box. Orbit skipped.".format(i))
+            #     count_failed += 1
+            #     continue
+
+            # if 0 < sad.count_source_in_upwindbox():
+            #     failed.append("{:05d} Sources present in the upwind box. Orbit skipped.".format(i))
+            #     count_failed += 1
+            #     continue
 
         v = sad.q_valid_hour
         csv.append("{:05d}, {}-{:02d}-{:02d}, {}, {}, {}".format(i, sad.tropomi_source_date.year, sad.tropomi_source_date.month, sad.tropomi_source_date.day, v, sad.transects_valid_pixels_count, sad.transects_valid_positive_pixels_count))
@@ -1846,6 +1863,14 @@ def _list_tropomi_correlation(orbit: str, processor:str, fileout:str) -> None:
 def _handler_chart_activity(args):
     _chart_HailCreek_Activity(None)
 
+def _handler_chart_S2(args):
+    if logger is None: Config.create_log("Paper_Run.log")
+    _chart_sadavarte_figure2(args.type, None)
+
+def _handler_chart_srtm(args):
+    config = Config()
+    _chart_SRTM(config.Algorithm_CSF_domain_ymax, config.Algorithm_CSF_domain_xmin, config.Algorithm_CSF_domain_ymin, config.Algorithm_CSF_domain_xmax, None)
+
 def _handler_chart_synthetic(args):
     _chart_synthetic_transect(None)
 
@@ -2139,6 +2164,7 @@ def _handler_run(args):
 
     _chart_HYSPLIT_HailCreek_SingleTrajectory("HailCreek", orbit, processor9956, model, emission_start_date, emission_end_date, chart_datetime, fileout)
     _chart_SRTM(-20.5, 146.0, -24.0, 150.0, path.join(Config.Paper_folder, "Figure_SRTM_Topography_HailCreek_Large.png"))
+    _chart_SRTM(-21.0, 147.85, -22.0, 148.9, path.join(Config.Paper_folder, "Figure_SRTM_Topography_HailCreek_Detail.png"))
     _chart_AWS_windrose(path.join(Config.Paper_folder, "Figure_MoranbahAWS_windrose.png"))
     _chart_HailCreek_Activity(path.join(Config.Paper_folder, "Figure_CoalProduction_HailCreek_FinancialYear.png"))
     _chart_synthetic_geometry(path.join(Config.Paper_folder,"Figure_Synthetic_Geometry.png"))
@@ -2419,6 +2445,13 @@ if __name__ == '__main__':
 
     parser_chart_activity= sub_parser_chart.add_parser("activity", help="Chart activity.")
     parser_chart_activity.set_defaults(func=_handler_chart_activity)
+
+    parser_chart_S2 = sub_parser_chart.add_parser("S2", help="Chart S2 values.")
+    parser_chart_S2.add_argument("type", type=str, choices=["figure2", "figure2_min_max"], help="List different data sects for paper")
+    parser_chart_S2.set_defaults(func=_handler_chart_S2)
+
+    parser_chart_SRTM = sub_parser_chart.add_parser("SRTM", help="Chart SRTM chart over domain.")
+    parser_chart_SRTM.set_defaults(func=_handler_chart_srtm)
 
     parser_chart_synthetic = sub_parser_chart.add_parser("synthetic", help="Chart synthetic charts.")
     parser_chart_synthetic.set_defaults(func=_handler_chart_synthetic)

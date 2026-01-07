@@ -274,8 +274,7 @@ class Algorithm_HYSPLIT:
             cbar.ax.set_xlabel("CH4 ppb")
 
         if tbox1.contains(self.source.xy):
-            ax.plot(self.source.longitude, self.source.latitude, 'go', markersize=7)
-            ax.text(self.source.label_longitude, self.source.label_latitude, self.source.display_name, color="black")
+            self.source.plot_source(ax)
 
         for t in self.trajectories:
             for (j,p) in t.points.items():
@@ -391,8 +390,7 @@ class Algorithm_HYSPLIT:
         for t in self.trajectories:
             t.draw_trajectory(plt, geodetic, plateCarree, self.endtime)
 
-        ax.plot(self.source.longitude, self.source.latitude, 'go', markersize=7)
-        ax.text(self.source.label_longitude, self.source.label_latitude, self.source.display_name, color="black")
+        self.source.plot_source(ax)
 
         title = "HYSPLIT Model: {}. Orbit: {} Processor:{}\nBackward trajectory 2019091404 - 2019091423. Forward trajectory 2019091423 - 2019091504".format(self.model, tropomi.orbit, tropomi.processor_version)
         plt.title(title)
@@ -483,8 +481,7 @@ class Algorithm_HYSPLIT:
         ax.legend(handles=[red_patch, green_patch, blue_patch, cyan_patch])
         # cbar = fig.colorbar(ScalarMappable(norm=norm, cmap = cmap), ax=ax, orientation="horizontal", pad=0.075)
 
-        ax.plot(self.source.longitude, self.source.latitude, 'go', markersize=7)
-        ax.text(self.source.label_longitude, self.source.label_latitude, self.source.display_name, color="black")
+        self.source.plot_source(ax)
 
         for t in self.trajectories:
             t.draw_trajectory(plt, geodetic, plateCarree, self.endtime)
@@ -679,7 +676,6 @@ def _handler_chart_time_series(args: Namespace):
     '''
     Config.create_log("Algorithm_HYSPLIT_{}_{}.log".format(args.source, args.orbit))
 
-
     if args.source == "HailCreek":
         source = create_source("HailCreek")
 
@@ -689,8 +685,8 @@ def _handler_chart_time_series(args: Namespace):
     t_backward = path.join(Config.HYSPLIT_folder, args.source, "HYSPLIT_{}_B_{}_{}.txt".format(args.model, args.startdate, args.date_at_mine))
     t_forward = path.join(Config.HYSPLIT_folder, args.source, "HYSPLIT_{}_F_{}_{}.txt".format(args.model, args.date_at_mine, args.enddate))
     if not logger is None: logger.info("Processing file {}".format(t_backward))
-    if path.exists(t_backward): ah.addTrajectories(Algorithm_HYSPLIT_from_trajectory(source, args.model, args.date_at_mine, t_backward).trajectories)
-    if path.exists(t_forward): ah.addTrajectories(Algorithm_HYSPLIT_from_trajectory(source, args.model, args.date_at_mine, t_forward).trajectories)
+    if path.exist(t_backward): ah.addTrajectories(Algorithm_HYSPLIT_from_trajectory(source, args.model, args.date_at_mine, t_backward).trajectories)
+    if path.exist(t_forward): ah.addTrajectories(Algorithm_HYSPLIT_from_trajectory(source, args.model, args.date_at_mine, t_forward).trajectories)
 
     ah.chart_time_series(geometry, args.orbit, args.processor, None)
 

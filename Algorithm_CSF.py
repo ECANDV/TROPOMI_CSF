@@ -16,7 +16,7 @@ from Meteorology import Meteorology
 from numpy import average, ma, nan
 from os import listdir, path, remove
 from pickle import dump, load
-from shapely import LineString,prepare, Point, Polygon
+from shapely import LineString,prepare, Point, Polygon, box
 from Source import create_source, Source
 from trajectory import drawTrajectory
 from TROPOMI import TROPOMI, TROPOMI_for_orbit
@@ -906,10 +906,8 @@ class Algorithm_CSF:
         axs01.quiver(self.source.gridpoint.x, self.source.gridpoint.y, self.u, self.v)
 
         # Draw mine marker
-        axs00.plot(self.source.xy.x, self.source.xy.y, 'go', markersize=7)
-        axs01.plot(self.source.xy.x, self.source.xy.y, 'go', markersize=7)
-        axs00.text(self.source.label_longitude, self.source.label_latitude, self.source.display_name, color="black")
-        axs01.text(self.source.label_longitude, self.source.label_latitude, self.source.display_name, color="black")
+        Source.plot_source_in_extent(self.tropomi_source_date,minlon, minlat, maxlon, maxlat, axs00)
+        Source.plot_source_in_extent(self.tropomi_source_date,minlon, minlat, maxlon, maxlat, axs01)
 
         # Plot point at which wind is calculated
         axs00.plot(self.source.gridpoint.x, self.source.gridpoint.y, 'gv', markersize=7)
@@ -1072,8 +1070,7 @@ class Algorithm_CSF:
 
 
         # Draw mine marker
-        ax.plot(self.source.xy.x, self.source.xy.y, 'go', markersize=7)
-        ax.text(self.source.label_longitude, self.source.label_latitude, self.source.display_name, color="black")
+        Source.plot_source_in_extent(self.tropomi_source_date, minlon, minlat, maxlon, maxlat, ax)
 
         # Plot point at which wind is calculated
         ax.plot(self.source.gridpoint.x, self.source.gridpoint.y, 'gv', markersize=7)
@@ -1227,8 +1224,7 @@ class Algorithm_CSF:
 
 
         # Draw mine marker
-        ax.plot(self.source.xy.x, self.source.xy.y, 'go', markersize=7)
-        ax.text(self.source.label_longitude, self.source.label_latitude, self.source.display_name, color="black")
+        Source.plot_source_in_extent(self.tropomi_source_date, minlon, minlat, maxlon, maxlat, ax)
 
         # Plot point at which wind is calculated
         ax.plot(self.source.gridpoint.x, self.source.gridpoint.y, 'gv', markersize=7)
@@ -1381,10 +1377,8 @@ class Algorithm_CSF:
         # Draw wind arrow at location of ERA 5 retrieval
         ax.quiver(self.source.gridpoint.x, self.source.gridpoint.y, self.u, self.v)
 
-
         # Draw mine marker
-        ax.plot(self.source.xy.x, self.source.xy.y, 'go', markersize=7)
-        ax.text(self.source.label_longitude, self.source.label_latitude, self.source.display_name, color="black")
+        Source.plot_source_in_extent(self.tropomi_source_date, minlon, minlat, maxlon, maxlat, ax)
 
         # Plot point at which wind is calculated
         ax.plot(self.source.gridpoint.x, self.source.gridpoint.y, 'gv', markersize=7)
@@ -1634,7 +1628,27 @@ class Algorithm_CSF:
             if (not(logger is None)): logger.info("{}".format(t))
 
         return
+
+    def count_source_in_downindbox(self) -> int:
+        ''' Calculate number of sources in the downwind box if exists.'''
+        cnt = 0
+        if self.downwind_box is None: return cnt
+        for s in Source.Sources:
+            src = create_source(s)
+            if src == self.source: continue
+            if self.downwind_box.contains(src.xy): cnt += 1
+        return cnt
     
+    def count_source_in_upwindbox(self) -> int:
+        ''' Calculate number of sources in the upwind box if used.'''
+        cnt = 0
+        if self.upwind_box is None: return cnt
+        for s in Source.Sources:
+            src = create_source(s)            
+            if src == self.source: continue
+            if self.upwind_box.contains(src.xy): cnt += 1
+        return cnt
+
     def list_calculation_Properties(self):
         '''
         List calculation properties for data analysis.
@@ -1877,17 +1891,19 @@ def _handler_clean_all(args: Namespace):
             remove(filename_log)
             if not logger is None: logger.info("Removed: {}".format(filename_log))
 
-        cache = path.join(Config.CSF_folder, args.source, orbit, args.processor)
+        cache = path.join(Config.CSF_folder, args.source)
         if not path.exists(cache): continue
         if not path.isdir(cache): continue
 
-        cache_list = listdir(cache)
-        for pkl in cache_list:
-            if pkl.startswith("Algorithm_CSF_") and pkl.endswith(".pkl"):
-                filename_end = path.join(cache, pkl)        
-                if path.exists(filename_end): 
-                    remove(filename_end)
-                    if not logger is None: logger.info("Removed: {}".format(filename_end))
+        for p in Config.TROPOMI_Processors:
+            cache_list = listdir(cache)
+            processor = "_"+p+"_"
+            for pkl in cache_list:
+                if pkl.startswith("Algorithm_CSF_") and processor in pkl and pkl.endswith(".pkl"):
+                    filename_end = path.join(cache, pkl)        
+                    if path.exists(filename_end): 
+                        remove(filename_end)
+                        if not logger is None: logger.info("Removed: {}".format(filename_end))
 
 def _handler_list(args: Namespace):
     '''
