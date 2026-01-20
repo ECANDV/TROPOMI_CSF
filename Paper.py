@@ -150,6 +150,12 @@ csv_emissions.append("Borchardt et all. 2025,122.6,3 Jun 2022,Aircraft")
 csv_emissions.append("Borchardt et all. 2025,84,28 Sep 2023	Aircraft")
 csv_emissions.append("Borchardt et all. 2025,99,29 Sep 2023,Aircraft")
 
+csv_hysplit_backward = ["Arrival at Hail Creek,Latitude deg S,Longitude deg E"]
+csv_hysplit_backward.append("2019-08-10 02Z,-25.039,141.983")
+csv_hysplit_backward.append("2019-08-10 01Z,-24.983,142.397")
+csv_hysplit_backward.append("2019-08-10 00Z,-24.896,142.858")
+csv_hysplit_backward.append("2019-08-09 23Z,-24.944,143.269")
+
 def __utility_file_does_not_exist(f: str) -> None:
     '''
     Handler for missing file
@@ -1277,6 +1283,13 @@ def _list_HailCreek_emissions(fileout: str) -> None:
     __utility_table_output_csv(fileout, csv_emissions)
     return
 
+def _list_HYSPLIT_09431_Background(fileout: str) -> None:
+    '''
+    List HYSPLIT background puffs location
+    '''
+    __utility_table_output_csv(fileout, csv_hysplit_backward)
+    return
+
 def _list_tropomi_filteredorbits(type: str, fileout: str) -> None:
     '''
     List content of filters into csv files
@@ -2346,14 +2359,14 @@ def _handler_run(args):
     _chart_CSF_transects("HailCreek", "09445", processor9445, path.join(Config.Paper_folder, "Figure_CSF_HailCreek_09445_Transect.png"))
 
     filter_start_start = datetime(2019, 8, 10, 0, tzinfo=timezone.utc)
-    filter_start_end = datetime(2019, 8, 10, 3, tzinfo=timezone.utc)
+    filter_start_end = datetime(2019, 8, 10, 2, tzinfo=timezone.utc)
     filter_end_start = datetime(2019, 8, 10, 3, tzinfo=timezone.utc)
     filter_end_end = datetime(2019, 8, 10, 3, tzinfo=timezone.utc)
     slice_datetime = datetime(2019, 8, 10, 3, tzinfo=timezone.utc)    
     orbit = "09445"
     model =  "GFSQ"
     direction = "F"
-    fileout = path.join(Config.Paper_folder, "Figure_HYSPLIT_Slice_09445_GFSQ_F_2019081000_2019081003_2019081003_2019081003_2019081003.png")
+    fileout = path.join(Config.Paper_folder, "Figure_HYSPLIT_Slice_09445_GFSQ_F_2019081000_2019081002_2019081003_2019081003_2019081003.png")
     _chart_HYSPLIT_time_slice("HailCreek", orbit, processor9445, model, direction, filter_start_start, filter_start_end, filter_end_start, filter_end_end, slice_datetime, fileout)
     
     processor9431 = TROPOMI.get_processor_version(ncdict[9431])
@@ -2430,8 +2443,7 @@ def _handler_run(args):
     date_start = datetime(2019,8,9,4,0, tzinfo=timezone.utc)
     date_end = datetime(2019,8,10,4,0, tzinfo=timezone.utc)
     _list_BOM_Moranbabah(date_start, date_end, path.join(Config.Paper_folder, "Table_BOM_Moranbah_2019080904_2019081004.csv"))
-
-    # Table 27. Location of trajectory start points
+    _list_HYSPLIT_09431_Background(path.join(Config.Paper_folder, "Table_HYSPLIT_09431_background.csv"))
 
 if __name__ == '__main__':
     parser = ArgumentParser(prog="Paper")
