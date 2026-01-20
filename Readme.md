@@ -1,7 +1,7 @@
 # Introduction
 This project is used for analysis of Cross Sectional Flux method applied to TROPOMI data. 
 
-Full report is available on the EC&V web site [Report](http:\\www.ecandv.com.au\projects\TROPOMI_CSF)
+Full report is available on the EC&V web site [Report](http://www.ecandv.com.au/projects/TROPOMI_CSF)
 
 # Project installation
 Installation notes target VS Code on Windows 10 and 11. As all code is written in Python this should be easily modifed to Linux or MacOS operating system and your favourite Python IDE.
